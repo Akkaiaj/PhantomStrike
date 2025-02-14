@@ -28,6 +28,14 @@ PhantomStrike is an advanced post-exploitation framework designed to provide ste
 
 
 ---
+![GitHub last commit](https://img.shields.io/github/last-commit/Akkaiaj/PhantomStrike)
+![GitHub issues](https://img.shields.io/github/issues/Akkaiaj/PhantomStrike)
+![GitHub stars](https://img.shields.io/github/stars/Akkaiaj/PhantomStrike)
+![GitHub license](https://img.shields.io/github/license/Akkaiaj/PhantomStrike)
+
+
+
+
 
 Features 🔧
 
