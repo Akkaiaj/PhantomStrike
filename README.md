@@ -1,19 +1,21 @@
-PhantomStrike
+PhantomStrike - Stealth C2 Framework
 
-A powerful and stealthy Command & Control (C2) framework for penetration testing and red team operations.
+PhantomStrike is an advanced post-exploitation framework designed for persistence, privilege escalation, and remote control.
 
-Features
+Features:
 
-⚡ Remote Agent Deployment – Deploy agents on target machines.
+⚡ Fileless Execution – Runs without writing files to disk.
 
-🔍 Covert Communication – Uses encrypted communication for stealth.
+🖥️ Reverse Shell – Gain full access to remote machines.
 
-🛠️ Modular & Extensible – Easily add new functionalities.
+🔝 Privilege Escalation – Elevate permissions automatically.
 
-🕵️ Recon & Exploitation – Automates post-exploitation tasks.
+🔑 Credential Dumping – Extract passwords and sensitive data.
+
+🕵️ Stealth Mode – Evades detection using advanced techniques.
 
 
-Installation
+Installation:
 
 Clone the repository:
 
@@ -24,7 +26,7 @@ Ensure dependencies are installed:
 
 pip install -r requirements.txt
 
-Usage
+Usage:
 
 Start the C2 server:
 
@@ -34,7 +36,21 @@ Deploy the agent on a target machine:
 
 python3 phantom_agent.py
 
-Disclaimer
+Donate:
 
-This tool is for educational purposes only. Use it responsibly.
+Support the development of PhantomStrike:
+
+BTC: bc1q0ruwrc4gs465xvu6tcn24h62pclt96sh2yv8pq
+
+ETH: 0x69B6F3aA9F470d4cBD93CDC4c0A887C0787CEf9B
+
+SOL: Gk6CmvvS6fi1Nfnu7QEEneshbLkmaE5Ue8sBzxz91D3q
+
+
+Disclaimer:
+
+This tool is for educational and research purposes only. Unauthorized use is strictly prohibited.
+
+
+---
 
