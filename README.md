@@ -1,3 +1,6 @@
+PhantomStrike - Stealth C2 Framework
+
+
 ---
 
 ██████╗ ██╗  ██╗ █████╗ ███╗   ███╗████████╗ ██████╗ ███████╗
@@ -121,7 +124,9 @@ Implements polymorphic obfuscation for stealth
 If you find PhantomStrike useful, consider donating:
 
 BTC: bc1q0ruwrc4gs465xvu6tcn24h62pclt96sh2yv8pq
+
 ETH: 0x69B6F3aA9F470d4cBD93CDC4c0A887C0787CEf9B
+
 SOL: Gk6CmvvS6fi1Nfnu7QEEneshbLkmaE5Ue8sBzxz91D3q
 
 
