@@ -1,8 +1,2 @@
-Flask==2.1.2
-requests==2.32.3
-pycryptodome==3.10.1
-logging
-subprocess
-socket
-base64
-time
+Flask==2.3.3
+pycryptodome==3.20.0
